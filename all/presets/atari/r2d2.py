@@ -49,15 +49,16 @@ def r2d2(
                 exploration=LinearScheduler(
                     initial_exploration,
                     final_exploration,
-                    replay_start_size,
-                    final_exploration_step - replay_start_size,
-                    name="epsilon",
+                    replay_start_size // n_envs,
+                    (final_exploration_step - replay_start_size) // n_envs,
+                    name="exploration",
                     writer=writer
                 ),
                 discount_factor=discount_factor,
                 minibatch_size=minibatch_size,
                 rollout_len=rollout_len,
                 update_frequency=update_frequency,
+                writer=writer,
             )
         )
     return _r2d2, n_envs

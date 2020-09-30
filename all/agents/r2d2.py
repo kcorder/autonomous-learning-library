@@ -7,13 +7,22 @@ from ._agent import Agent
 
 
 class R2D2(Agent):
+    # TODO:
+    # [ ] decorrelate rollouts
+    # [ ] target network
+    # [ ] n-step
+    # [ ] value function rescaling
+    # [ ] no reward clipping
+    # [ ] store hidden state
     def __init__(self,
                     q_rnn,
                     discount_factor=0.99,
                     exploration=0.02,
                     minibatch_size=32,
-                    rollout_len=20,
+                    rollout_len=40,
                     update_frequency=10,
+                    replay_buffer_size=100000,
+                    writer=None,
                  ):
         # objects
         self.q_rnn = q_rnn
@@ -22,11 +31,13 @@ class R2D2(Agent):
         self.exploration = exploration
         self.rollout_len = 20
         self.update_frequency = update_frequency
+        self.writer = writer
         # private
         self._state = None
         self._action = None
         self._frames_seen = 0
         # buffer
+        self.replay_buffer_size = replay_buffer_size
         self._warmup_temp_buffer = []
         self._train_temp_buffer = []
         self._buffer = []
@@ -73,6 +84,8 @@ class R2D2(Agent):
             loss = mse_loss(q_values[0:-1], targets)
             # backward pass
             self.q_rnn.reinforce(loss)
+            # info
+            self.writer.add_loss('q_mean', q_values.mean().item())
 
     def _should_train(self):
         self._frames_seen += 1
@@ -96,6 +109,8 @@ class R2D2(Agent):
             self._buffer.append((self._warmup_temp_buffer, _train_temp_buffer))
             self._warmup_temp_buffer = _train_temp_buffer
             self._train_temp_buffer = []
+            if len(self._buffer) * self.rollout_len * state.shape[0] > self.replay_buffer_size:
+                self._buffer.pop()
 
     def _sample(self):
         keys = np.random.choice(len(self._buffer), self.minibatch_size, replace=True)
