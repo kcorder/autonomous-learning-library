@@ -46,7 +46,9 @@ def r2d2(
         lr=7e-4,
         # Training settings
         minibatch_size=32,
-        update_frequency=5,
+        update_frequency=1,
+        # Recurrent settings
+        rollout_len=100,
         # Exploration settings
         initial_exploration=1.,
         final_exploration=0.01,
@@ -72,7 +74,7 @@ def r2d2(
             ),
             discount_factor=discount_factor,
             minibatch_size=minibatch_size,
-            rollout_len=20,
+            rollout_len=rollout_len,
             update_frequency=update_frequency,
         )
     return _r2d2, n_envs

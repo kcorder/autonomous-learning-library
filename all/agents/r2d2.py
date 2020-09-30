@@ -42,8 +42,7 @@ class R2D2(Agent):
         else:
             q, (self.h, self.c) = self.q_rnn.no_grad(state, (self.h, self.c))
         action = self._choose_action(q)
-        state = state.update('action', action)
-        self._store(state)
+        self._store(state, action)
         return action
 
     def _choose_action(self, q):
@@ -80,17 +79,19 @@ class R2D2(Agent):
         return (len(self._buffer) > self.minibatch_size and
                 self._frames_seen % self.update_frequency == 0)
 
-    def _store(self, state):
+    def _store(self, state, action):
+        state = state.update('action', action)
+
         if len(self._warmup_temp_buffer) < self.rollout_len:
             self._warmup_temp_buffer.append(state)
             if len(self._warmup_temp_buffer) == self.rollout_len:
-                self._warmup_temp_buffer = State.from_list(self._warmup_temp_buffer)
+                self._warmup_temp_buffer = State.array(self._warmup_temp_buffer)
             return
         if len(self._train_temp_buffer) < self.rollout_len:
             self._train_temp_buffer.append(state)
             return
         if len(self._train_temp_buffer) == self.rollout_len:
-            _train_temp_buffer = State.from_list(self._train_temp_buffer)
+            _train_temp_buffer = State.array(self._train_temp_buffer)
             # TODO need to decouple states
             self._buffer.append((self._warmup_temp_buffer, _train_temp_buffer))
             self._warmup_temp_buffer = _train_temp_buffer
