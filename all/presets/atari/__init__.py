@@ -4,6 +4,7 @@ from .dqn import dqn
 from .ddqn import ddqn
 from .ppo import ppo
 from .rainbow import rainbow
+from .r2d2 import r2d2
 from .vac import vac
 from .vpg import vpg
 from .vqn import vqn
@@ -16,6 +17,7 @@ __all__ = [
     "dqn",
     "ppo",
     "rainbow",
+    "r2d2",
     "vac",
     "vpg",
     "vqn",
