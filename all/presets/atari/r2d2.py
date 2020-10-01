@@ -19,7 +19,7 @@ def r2d2(
         # Training settings
         minibatch_size=64,
         update_frequency=4,
-        target_update_frequency=1000,
+        target_update_frequency=500,
         # Replay buffer settings
         replay_start_size=80000,
         replay_buffer_size=1000000,

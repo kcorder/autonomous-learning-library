@@ -14,6 +14,7 @@ class R2D2(Agent):
     # [ ] value function rescaling
     # [ ] no reward clipping
     # [ ] store hidden state
+    # [ ] add action and reward to nn input
     def __init__(self,
                     q_rnn,
                     discount_factor=0.99,
@@ -79,7 +80,12 @@ class R2D2(Agent):
             values, (h, c) = self.q_rnn(train_states, (h, c))
             q_values = values.gather(2, train_states['action'].unsqueeze(-1)).squeeze(2)
             # compute_targets
-            targets = train_states['reward'][:-1] + self.discount_factor * q_values[1:].detach()
+            h = None
+            c = None
+            _, (h, c) = self.q_rnn.target(warmup_states)
+            values, (h, c) = self.q_rnn.target(train_states, (h, c))
+            target_q_values = values.gather(2, train_states['action'].unsqueeze(-1)).squeeze(2)
+            targets = train_states['reward'][:-1] + self.discount_factor * target_q_values[1:].detach()
             # compute loss
             loss = mse_loss(q_values[0:-1], targets)
             # backward pass

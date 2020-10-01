@@ -8,7 +8,7 @@ def main():
     device = 'cuda'
 
     def get_agents(preset):
-        agents = [getattr(preset, agent_name) for agent_name in classic_control.__all__]
+        agents = [getattr(preset, agent_name) for agent_name in preset.__all__]
         return [agent(device=device) for agent in agents]
 
     SlurmExperiment(
