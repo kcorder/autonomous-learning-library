@@ -8,9 +8,10 @@ from ._agent import Agent
 
 class R2D2(Agent):
     # TODO:
-    # [ ] decorrelate rollouts
-    # [ ] target network
+    # [x] target network
+    # [x] decorrelate rollouts
     # [ ] n-step
+    # [ ] fix lazy state
     # [ ] value function rescaling
     # [ ] no reward clipping
     # [ ] store hidden state
@@ -30,7 +31,7 @@ class R2D2(Agent):
         self.discount_factor = discount_factor
         self.minibatch_size = minibatch_size
         self.exploration = exploration
-        self.rollout_len = 20
+        self.rollout_len = rollout_len
         self.update_frequency = update_frequency
         self.writer = writer
         # private
@@ -39,8 +40,9 @@ class R2D2(Agent):
         self._frames_seen = 0
         # buffer
         self.replay_buffer_size = replay_buffer_size
-        self._warmup_temp_buffer = []
-        self._train_temp_buffer = []
+        self._warmup = []
+        self._warmup_temp = []
+        self._train_temp = []
         self._buffer = []
         self.h = None
         self.c = None
@@ -85,9 +87,9 @@ class R2D2(Agent):
             _, (h, c) = self.q_rnn.target(warmup_states)
             values, (h, c) = self.q_rnn.target(train_states, (h, c))
             target_q_values = values.gather(2, train_states['action'].unsqueeze(-1)).squeeze(2)
-            targets = train_states['reward'][:-1] + self.discount_factor * target_q_values[1:].detach()
+            targets = train_states['reward'][:,:-1] + self.discount_factor * target_q_values[:,1:].detach()
             # compute loss
-            loss = mse_loss(q_values[0:-1], targets)
+            loss = mse_loss(q_values[:,0:-1], targets)
             # backward pass
             self.q_rnn.reinforce(loss)
             # info
@@ -101,21 +103,22 @@ class R2D2(Agent):
     def _store(self, state, action):
         state = state.update('action', action)
 
-        if len(self._warmup_temp_buffer) < self.rollout_len:
-            self._warmup_temp_buffer.append(state)
-            if len(self._warmup_temp_buffer) == self.rollout_len:
-                self._warmup_temp_buffer = State.array(self._warmup_temp_buffer)
+        if len(self._warmup_temp) < self.rollout_len:
+            self._warmup_temp.append(state)
+            if len(self._warmup_temp) == self.rollout_len:
+                self._warmup = self._reshape(self._warmup_temp)
             return
-        if len(self._train_temp_buffer) < self.rollout_len:
-            self._train_temp_buffer.append(state)
-            return
-        if len(self._train_temp_buffer) == self.rollout_len:
-            _train_temp_buffer = State.array(self._train_temp_buffer)
-            # TODO need to decouple states
-            self._buffer.append((self._warmup_temp_buffer, _train_temp_buffer))
-            self._warmup_temp_buffer = _train_temp_buffer
-            self._train_temp_buffer = []
-            if len(self._buffer) * self.rollout_len * state.shape[0] > self.replay_buffer_size:
+
+        if len(self._train_temp) < self.rollout_len:
+            self._train_temp.append(state)
+
+        if len(self._train_temp) == self.rollout_len:
+            _experiences = self._reshape(self._train_temp)
+            for warmup, experience in zip(self._warmup, _experiences):
+                self._buffer.append((warmup, experience))
+            self._warmup = _experiences
+            self._train_temp = []
+            while len(self._buffer) * self.rollout_len > self.replay_buffer_size:
                 self._buffer.pop()
 
     def _sample(self):
@@ -123,5 +126,9 @@ class R2D2(Agent):
         minibatch = [self._buffer[key] for key in keys]
         warmup_states = [x[0] for x in minibatch]
         train_states = [x[1] for x in minibatch]
-        return warmup_states[0], train_states[0]
-        # return State.from_list(warmup_states), State.from_list(train_states)
+        return State.array(warmup_states), State.array(train_states)
+
+    def _reshape(self, states):
+        n_steps = len(states)
+        n_envs = len(states[0])
+        return [State.array([states[t][i] for t in range(n_steps)]) for i in range(n_envs)]

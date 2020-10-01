@@ -3,7 +3,7 @@ from torch import nn
 from torch.nn.functional import relu
 from torch.optim import Adam
 from all.agents import R2D2
-from all.approximation import Approximation
+from all.approximation import Approximation, FixedTarget
 from all.logging import DummyWriter
 from all.optim import LinearScheduler
 
@@ -48,7 +48,7 @@ def r2d2(
         minibatch_size=32,
         update_frequency=1,
         # Recurrent settings
-        rollout_len=100,
+        rollout_len=20,
         # Exploration settings
         initial_exploration=1.,
         final_exploration=0.01,
@@ -61,7 +61,7 @@ def r2d2(
     def _r2d2(env, writer=DummyWriter()):
         model = RecurrentQ(env[0], hidden=hidden).to(device)
         optimizer = Adam(model.parameters(), lr=lr)
-        q_rnn = Approximation(model, optimizer, writer=writer)
+        q_rnn = Approximation(model, optimizer, target=FixedTarget(100), writer=writer)
         return R2D2(
             q_rnn,
             exploration=LinearScheduler(
@@ -76,6 +76,7 @@ def r2d2(
             minibatch_size=minibatch_size,
             rollout_len=rollout_len,
             update_frequency=update_frequency,
+            writer=writer
         )
     return _r2d2, n_envs
 
