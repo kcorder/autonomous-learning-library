@@ -17,25 +17,25 @@ class RecurrentQ(nn.Module):
 
     def forward(self, state, hc=None):
         if hc is None:
-            h = torch.zeros((state.shape[-1], self.hidden), device=state.device)
-            c = torch.zeros((state.shape[-1], self.hidden), device=state.device)
+            h = torch.zeros((state.shape[0], self.hidden), device=state.device)
+            c = torch.zeros((state.shape[0], self.hidden), device=state.device)
         else:
             h, c = hc
         if len(state.shape) == 1:
             encoded = relu(state.as_output(self.encoder(state.as_input('observation'))))
             _h, _c = self.lstm(encoded, (h, c))
-            q_values = state.as_output(self.decoder(_h.view(-1, self.hidden)))
+            q_values = state.as_output(self.decoder(_h))
             return state.apply_mask(state.as_output(q_values)), (state.apply_mask(_h), state.apply_mask(_c))
 
         encoded = relu(state.as_output(self.encoder(state.as_input('observation'))))
         latent = []
-        for t in range(state.shape[0]):
-            h, c = self.lstm(encoded[t], (h, c))
-            h, c = h * state.mask[t].unsqueeze(-1), c * state.mask[t].unsqueeze(-1)
+        for t in range(state.shape[1]):
+            h, c = self.lstm(encoded[:,t], (h, c))
+            h, c = h * state.mask[:,t].unsqueeze(-1), c * state.mask[:,t].unsqueeze(-1)
             latent.append(h)
         latent = torch.stack(latent)
-        t, b = state.shape
-        values = self.decoder(latent.view(-1, self.hidden)).view((t, b, -1))
+        batch_size, timesteps = state.shape
+        values = self.decoder(latent.view(-1, self.hidden)).view((timesteps, batch_size, -1)).transpose(0, 1)
         return state.apply_mask(values), (h, c)
 
 def r2d2(
