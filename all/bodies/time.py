@@ -15,7 +15,7 @@ class TimeFeature(Body):
         print(state.observation)
         print(type(state.observation))
         print(self.scale * self.timestep.view(-1, 1))
-        print(type(self.scale * self.timestep.view(-1, 1))))
+        print(type(self.scale * self.timestep.view(-1, 1)))
         if isinstance(state, StateArray):
             if self.timestep is None:
                 self.timestep = torch.zeros(state.shape, device=state.device)
