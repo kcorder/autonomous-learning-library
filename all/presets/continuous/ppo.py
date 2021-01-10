@@ -115,7 +115,7 @@ class PPOContinuousPreset(Preset):
             ),
         )
 
-        return TimeFeature(PPO(
+        return PPO(
             features,
             v,
             policy,
@@ -135,12 +135,12 @@ class PPOContinuousPreset(Preset):
             lam=self.hyperparameters['lam'],
             entropy_loss_scaling=self.hyperparameters['entropy_loss_scaling'],
             writer=writer,
-        ))
+        )
 
     def test_agent(self):
         feature = FeatureNetwork(copy.deepcopy(self.feature_model))
         policy = GaussianPolicy(copy.deepcopy(self.policy_model), space=self.action_space)
-        return TimeFeature(PPOTestAgent(feature, policy))
+        return PPOTestAgent(feature, policy)
 
 
 ppo = preset_builder('ppo', default_hyperparameters, PPOContinuousPreset)
