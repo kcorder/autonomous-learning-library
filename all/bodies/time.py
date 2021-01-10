@@ -14,11 +14,11 @@ class TimeFeature(Body):
         print(state.shape)
         print(state.observation)
         print(type(state.observation))
-        print(self.scale * self.timestep.view(-1, 1))
-        print(type(self.scale * self.timestep.view(-1, 1)))
         if isinstance(state, StateArray):
             if self.timestep is None:
                 self.timestep = torch.zeros(state.shape, device=state.device)
+            print(self.scale * self.timestep.view(-1, 1))
+            print(type(self.scale * self.timestep.view(-1, 1)))
             observation = torch.cat((state.observation, self.scale * self.timestep.view(-1, 1)), dim=1)
             state = state.update('observation', observation)
             self.timestep = state.mask.float() * (self.timestep + 1)
