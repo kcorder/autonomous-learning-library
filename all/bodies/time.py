@@ -10,6 +10,10 @@ class TimeFeature(Body):
         super().__init__(agent)
 
     def process_state(self, state):
+        print(state)
+        print(state.shape)
+        print(state.observation)
+        print(type(state.observation))
         if isinstance(state, StateArray):
             if self.timestep is None:
                 self.timestep = torch.zeros(state.shape, device=state.device)
