@@ -2,8 +2,9 @@ import gym
 import torch
 from all.core import State
 from .abstract import Environment
-gym.logger.set_level(40)
 import pickle
+gym.logger.set_level(40)
+
 
 class GymEnvironment(Environment):
     '''
