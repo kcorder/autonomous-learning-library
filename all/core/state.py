@@ -69,19 +69,12 @@ class State(dict):
 
         for key in list_of_states[0].keys():
             v = list_of_states[0][key]
-            try:
-                if isinstance(v, list) and len(v) > 0 and torch.is_tensor(v[0]):
-                    x[key] = torch.stack([torch.stack(state[key]) for state in list_of_states])
-                elif torch.is_tensor(v):
-                    x[key] = torch.stack([state[key] for state in list_of_states])
-                else:
-                    x[key] = torch.tensor([state[key] for state in list_of_states], device=device)
-            except KeyError:
-                warnings.warn('KeyError while creating StateArray for key "{}", omitting.'.format(key))
-            except ValueError:
-                warnings.warn('ValueError while creating StateArray for key "{}", omitting.'.format(key))
-            except TypeError:
-                warnings.warn('TypeError while creating StateArray for key "{}", omitting.'.format(key))
+            if isinstance(v, list) and len(v) > 0 and torch.is_tensor(v[0]):
+                x[key] = torch.stack([torch.stack(state[key]) for state in list_of_states])
+            elif torch.is_tensor(v):
+                x[key] = torch.stack([state[key] for state in list_of_states])
+            else:
+                x[key] = torch.tensor([state[key] for state in list_of_states], device=device)
 
         return StateArray(x, shape, device=device)
 
