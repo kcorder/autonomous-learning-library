@@ -67,8 +67,11 @@ class State(dict):
         shape = (len(list_of_states), *list_of_states[0].shape)
         x = {}
 
+        print(list_of_states[0].keys())
+
         for key in list_of_states[0].keys():
             print(key)
+            print(type(key))
             v = list_of_states[0][key]
             if isinstance(v, list) and len(v) > 0 and torch.is_tensor(v[0]):
                 x[key] = torch.stack([torch.stack(state[key]) for state in list_of_states])
