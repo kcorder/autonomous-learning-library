@@ -1,3 +1,4 @@
+import math
 from all import nn
 
 
@@ -60,4 +61,12 @@ def fc_relu_rainbow(env, hidden=64, atoms=51, sigma=0.5):
                 hidden, env.action_space.n * atoms, init_scale=0.0, sigma_init=sigma
             ),
         ),
+    )
+
+def fc_sin_policy(env, hidden=64):
+    return nn.Sequential(
+        nn.Linear(env.state_space.shape[0], hidden),
+        nn.Scale(math.pi),
+        nn.Sin(),
+        nn.Linear0(hidden, env.action_space.n)
     )
