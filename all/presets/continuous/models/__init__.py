@@ -50,10 +50,11 @@ def fc_soft_policy(env, hidden1=400, hidden2=300):
 
 
 class fc_policy(nn.Module):
-    def __init__(self, env, hidden1=400, hidden2=300):
+    def __init__(self, env, time_feature=True, hidden1=400, hidden2=300):
         super().__init__()
+        input_size = env.state_space.shape[0] + 1 if time_feature else env.state_space.shape[0]
         self.model = nn.Sequential(
-            nn.Linear(env.state_space.shape[0] + 1, hidden1),
+            nn.Linear(input_size, hidden1),
             nn.Tanh(),
             nn.Linear(hidden1, hidden2),
             nn.Tanh(),

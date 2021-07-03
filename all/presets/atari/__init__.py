@@ -1,5 +1,6 @@
 from .a2c import a2c, A2CAtariPreset
 from .c51 import c51, C51AtariPreset
+from .cma_es import cma_es, CMA_ES_AtariPreset
 from .dqn import dqn, DQNAtariPreset
 from .ddqn import ddqn, DDQNAtariPreset
 from .ppo import ppo, PPOAtariPreset
@@ -13,6 +14,7 @@ from .vsarsa import vsarsa, VSarsaAtariPreset
 __all__ = [
     "a2c",
     "c51",
+    "cma_es",
     "ddqn",
     "dqn",
     "ppo",

@@ -53,7 +53,7 @@ class CMA_ES(Agent):
             returns = torch.tensor(self._returns, device=self.policy.device).float()
             if returns.std() > 0:
                 normalized = (returns - returns.mean()) / returns.std()
-                new_parameters = [initial + self.lr / (self.population_size * self.std) * torch.tensordot(normalized, perturbation, dims=1) for initial, perturbation in zip(self._initial, self._perturbations)]
+                new_parameters = [initial + self.lr / self.population_size * torch.tensordot(normalized, perturbation, dims=1) for initial, perturbation in zip(self._initial, self._perturbations)]
                 [p.copy_(new) for p, new in zip(self._parameters, new_parameters)]
         self._generate_population()
 
