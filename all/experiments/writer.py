@@ -56,7 +56,11 @@ class ExperimentWriter(SummaryWriter, Writer):
         self.add_evaluation(name + "/mean", mean, step)
         self.add_evaluation(name + "/std", std, step)
 
-        with open(os.path.join(self.log_dir, self.env_name, name + ".csv"), "a") as csvfile:
+        csv_path = os.path.join(self.log_dir, self.env_name, name + ".csv")
+        csv_dir = csv_path.rsplit('/', maxsplit=1)[0]
+        os.makedirs(csv_dir, exist_ok=True)
+
+        with open(os.path.join(self.log_dir, self.env_name, name + ".csv"), "a+") as csvfile:
             csv.writer(csvfile).writerow([self._get_step(step), mean, std])
 
     def _get_step(self, _type):
