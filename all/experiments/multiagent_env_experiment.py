@@ -32,7 +32,8 @@ class MultiagentEnvExperiment():
             save_freq=100,
             train_steps=float('inf'),
             write_loss=True,
-            writer="tensorboard"
+            writer="tensorboard",
+            test_env=None,
     ):
         self._name = name if name is not None else preset.name
         self._writer = self._make_writer(logdir, self._name, env.name, write_loss, writer)
@@ -45,6 +46,7 @@ class MultiagentEnvExperiment():
         self._quiet = quiet
         self._render = render
         self._save_freq = save_freq
+        self._test_env = test_env if test_env is not None else env
 
         if render:
             self._env.render()
@@ -132,19 +134,19 @@ class MultiagentEnvExperiment():
         self._episode += 1
 
     def _run_test_episode(self, test_agent):
-        self._env.reset()
-        returns = {agent: 0 for agent in self._env.agents}
+        self._test_env.reset()
+        returns = {agent: 0 for agent in self._test_env.agents}
 
-        for agent in self._env.agent_iter():
+        for agent in self._test_env.agent_iter():
             if self._render:
-                self._env.render()
-            state = self._env.last()
+                self._test_env.render()
+            state = self._test_env.last()
             returns[agent] += state.reward
             action = test_agent.act(state)
             if state.done:
-                self._env.step(None)
+                self._test_env.step(None)
             else:
-                self._env.step(action)
+                self._test_env.step(action)
             self._frame += 1
 
         return returns
