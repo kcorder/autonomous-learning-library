@@ -63,6 +63,9 @@ class MultiagentEnvExperiment():
     Returns:
         MultiagentEnvExperiment: The experiment object.
     '''
+    def seed_env(self, seed):
+        self._env.seed(seed)
+        self._test_env.seed(seed) 
 
     def train(self, frames=np.inf, episodes=np.inf):
         while not self._done(frames, episodes):
@@ -147,7 +150,6 @@ class MultiagentEnvExperiment():
                 self._test_env.step(None)
             else:
                 self._test_env.step(action)
-            self._frame += 1
 
         return returns
 
