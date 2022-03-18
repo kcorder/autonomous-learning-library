@@ -17,6 +17,7 @@ class ParallelEnvExperiment(Experiment):
             self,
             preset,
             env,
+            test_env=None,
             name=None,
             train_steps=float('inf'),
             logdir='runs',
@@ -33,6 +34,7 @@ class ParallelEnvExperiment(Experiment):
             self._env = env
         else:
             self._env = env.duplicate(self._n_envs)
+        self._test_env = test_env if test_env is not None else env
         self._preset = preset
         self._agent = preset.agent(writer=self._writer, train_steps=train_steps)
         self._render = render
@@ -97,13 +99,13 @@ class ParallelEnvExperiment(Experiment):
         should_record = [True] * self._n_envs
 
         # initialize state
-        states = self._env.reset()
+        states = self._test_env.reset()
         returns = states.reward.clone()
 
         while len(test_returns) < episodes:
             # step the agent and environments
             actions = test_agent.act(states)
-            states = self._env.step(actions)
+            states = self._test_env.step(actions)
             returns += states.reward
 
             # record any episodes that have finished
