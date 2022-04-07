@@ -236,6 +236,41 @@ class State(dict):
     def __len__(self):
         return 1
 
+    @classmethod
+    def cat(cls, state_array_list, axis=0):
+        '''Concatenates along batch dimention'''
+        if len(state_array_list) == 0:
+            raise ValueError("cat accepts a non-zero size list of StateArrays")
+
+        d = {}
+        state_size = sum(state_array.shape[axis] for state_array in state_array_list)
+        new_shape = list(state_array_list[0].shape)
+        new_shape[axis] = state_size
+        new_shape = tuple(new_shape)
+        keys = list(state_array_list[0].keys())
+        for key in keys:
+            d[key] = torch.cat([state_array[key] for state_array in state_array_list], axis=axis)
+        return StateArray(d, new_shape, device=state_array_list[0].device)
+
+    def batch_execute(self, minibatch_size, fn):
+        '''
+        execute in batches to reduce memory consumption
+        '''
+        data = self
+        batch_size = self.shape[0]
+        results = []
+        last = 0
+        while last < batch_size:
+            # load the indexes for the minibatch
+            first = last
+            last = min(first + minibatch_size, batch_size)
+            results.append(fn(data[first:last]))
+
+        if isinstance(results[0], StateArray):
+            return StateArray.cat(results)
+        else:
+            return torch.cat(results, axis=0)
+
 
 class StateArray(State):
     """
